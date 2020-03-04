@@ -55,8 +55,6 @@ def random_state(year_range, all_countries, num_selected=None, exclude={}, seed=
     })    
     return state
 
-"""Functions for creating altered states based on existing ones:"""
-
 def change_year_random(state, year_range, seed=None):
     new_state = copy.deepcopy(state)
     min_year, max_year = year_range
