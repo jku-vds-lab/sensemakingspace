@@ -252,6 +252,8 @@ iso_to_country = {
 
 country_to_iso = dict(zip(iso_to_country.values(), iso_to_country.keys()))
 
+all_countries = list(country_to_iso.keys())
+
 country_to_iso_fallback = {
     'Brunei': country_to_iso['Brunei Darussalam'],
     'Congo, Dem. Rep.': country_to_iso['Congo, Democratic Republic'],
