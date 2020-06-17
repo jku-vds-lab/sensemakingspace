@@ -9,8 +9,9 @@ import pandas as pd
 import copy
 from numba import njit, float64
 from numba import jit
-from openTSNE import TSNE
+from openTSNE import TSNE as openTSNE
 from openTSNE.callbacks import ErrorLogger
+from sklearn.manifold import TSNE as sklearnTSNE
 from umap import UMAP
 from csv import QUOTE_NONNUMERIC
 
@@ -87,7 +88,7 @@ class Stories:
                 countries,
                 condense_countries=condense_countries) for s in self.stories])
     
-    def project(self, weights={}, verbose=False, delete_duplicates=False, method='tsne', condense_countries=False, **kwargs):        
+    def project(self, weights={}, verbose=False, delete_duplicates=False, method='tsne', implementation='openTSNE', condense_countries=False, **kwargs):        
         w_dict = {
             'year': 1.,
             'x': 1.,
@@ -165,21 +166,26 @@ class Stories:
             encoded = self.encode()
 
         if method == 'tsne':
-            if verbose:
-                tsne = TSNE(
+            if implementation == 'openTSNE':
+                if verbose:
+                    tsne = openTSNE(
+                        metric=state_distance,
+                        callbacks=ErrorLogger(),
+                        n_jobs=-1,
+                        **kwargs
+                    )
+                else:
+                    tsne = openTSNE(
+                        metric=state_distance,
+                        n_jobs=-1,
+                        **kwargs
+                    )
+                embedding = np.array(tsne.fit(encoded))
+            elif implementation == 'sklearn':
+                tsne = sklearnTSNE(
                     metric=state_distance,
-                    callbacks=ErrorLogger(),
-                    n_jobs=8,
-                    **kwargs
-                )
-            else:
-                tsne = TSNE(
-                    metric=state_distance,
-                    n_jobs=8,
-                    **kwargs
-                )
-            
-            embedding = np.array(tsne.fit(encoded))
+                    verbose=3 if verbose else 0)
+                embedding = np.array(tsne.fit_transform(encoded))            
         elif method == 'umap':
             umap = UMAP(metric=state_distance,
                 verbose=verbose,
