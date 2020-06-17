@@ -100,6 +100,7 @@ def add_countries(state, countries):
 def remove_countries(state, countries):
     new_state = copy.deepcopy(state)
     new_state.countries = list(set(state.countries) - set(countries))
+    return new_state
 
 def add_countries_random(state, add_num, all_countries, seed=None):
     if seed is not None:
