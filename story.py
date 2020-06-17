@@ -20,7 +20,7 @@ class Story:
         'countries': []
     })
 
-    def __init__(self, source, drive_mounted=True, uploaded=None, name=None, set_initial=True):
+    def __init__(self, source=None, drive_mounted=True, uploaded=None, name=None, set_initial=True):
 
         self.name = name
 
@@ -28,20 +28,25 @@ class Story:
         #  (possibly handy for artificial stories)
         # or from a JSON file containing a provenance graph
 
-        assert len(source) != 0, 'A story must have at least one state!'
+        # if not set_initial:
+        #     assert len(source) != 0, 'A story must have at least one state!'
 
-        if type(source) is list and all([isinstance(s, State) for s in source]):
+        if type(source) is list and len(source) > 0 and all([isinstance(s, State) for s in source]):
             self.states = source
         elif isinstance(source, str):
             self.source = source
             self.states = self.from_json(
                 source, drive_mounted=drive_mounted, uploaded=uploaded)
+        elif set_initial:
+            self.states = []
+        else:
+            raise Exception('Story must have at elast one state!')
 
         # check if first state is initial Gapminder state
         # if not, insert initial Gapminder state
 
         if set_initial:
-            if self.states[0] != self.initial_state:
+            if self.states == [] or self.states[0] != self.initial_state:
                 self.states.insert(0, self.initial_state)
 
     def from_json(self, filename, drive_mounted=True, uploaded=None):
@@ -126,6 +131,9 @@ class Story:
 
     def __getitem__(self, key):
         return self.states[key]
+
+    def append(self, state):
+        self.states.append(state)
 
     def set_name(self, name):
         self.name = name

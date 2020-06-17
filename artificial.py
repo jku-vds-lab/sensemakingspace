@@ -55,6 +55,11 @@ def random_state(year_range, all_countries, num_selected=None, exclude={}, seed=
     })    
     return state
 
+def change_year(state, year):
+    new_state = copy.deepcopy(state)
+    new_state.year = year
+    return new_state
+
 def change_year_random(state, year_range, seed=None):
     new_state = copy.deepcopy(state)
     min_year, max_year = year_range
@@ -86,6 +91,15 @@ def change_color(state, exclude=[], seed=None):
     new_state = copy.deepcopy(state)
     new_state.color = new_value
     return new_state
+
+def add_countries(state, countries):
+    new_state = copy.deepcopy(state)
+    new_state.countries = list(set(state.countries) | set(countries))
+    return new_state
+
+def remove_countries(state, countries):
+    new_state = copy.deepcopy(state)
+    new_state.countries = list(set(state.countries) - set(countries))
 
 def add_countries_random(state, add_num, all_countries, seed=None):
     if seed is not None:
