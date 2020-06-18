@@ -92,13 +92,25 @@ def change_color(state, exclude=[], seed=None):
     new_state.color = new_value
     return new_state
 
+def set_countries(state, countries):
+    new_state = copy.deepcopy(state)
+    if isinstance(countries, str):
+        new_state.countries = [countries]
+    elif isinstance(countries, list):
+        new_state.countries = countries
+    return new_state
+
 def add_countries(state, countries):
     new_state = copy.deepcopy(state)
+    if isinstance(countries, str):
+        countries = [countries]
     new_state.countries = list(set(state.countries) | set(countries))
     return new_state
 
 def remove_countries(state, countries):
     new_state = copy.deepcopy(state)
+    if isinstance(countries, str):
+        countries = [countries]
     new_state.countries = list(set(state.countries) - set(countries))
     return new_state
 
