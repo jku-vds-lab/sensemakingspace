@@ -76,7 +76,12 @@ def add_to_year(state, add):
     new_state.year += add
     return new_state
 
-def change_axis(state, axis, exclude=[], seed=None):
+def change_axis(state, axis, new_value):
+    new_state = copy.deepcopy(state)
+    new_state.__dict__[axis] = new_value
+    return new_state
+
+def change_axis_random(state, axis, exclude=[], seed=None):
     ex = exclude.copy()
     ex.append(state.__dict__[axis])
     new_value = random_axis(exclude=ex, seed=seed)
@@ -84,7 +89,12 @@ def change_axis(state, axis, exclude=[], seed=None):
     new_state.__dict__[axis] = new_value
     return new_state
 
-def change_color(state, exclude=[], seed=None):
+def change_color(state, color):
+    new_state = copy.deepcopy(state)
+    new_state.color = color
+    return new_state
+
+def change_color_random(state, exclude=[], seed=None):
     ex = exclude.copy()
     ex.append(state.color)
     new_value = random_color(exclude=ex, seed=seed)
