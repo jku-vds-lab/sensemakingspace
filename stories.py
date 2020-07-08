@@ -53,7 +53,7 @@ class Stories:
 
     def __repr__(self):
         if len(self) == 1:
-            return 'Stories(<1 Story>")'
+            return 'Stories(<1 Story>)'
         else:
             return 'Story(<{} Stories>)'.format(len(self))
 
@@ -215,37 +215,38 @@ class Stories:
         plt.legend()
     
     def export_csv(self, filename, ids=None):
+        dframe = pd.DataFrame()
         if not self.projected:
-            raise Warning('Run projection first!')
-            return
-        x,y = np.concatenate(self.embedding).transpose()
+            print('Saving CSV without embedding!')
+        else:
+            x,y = np.concatenate(self.embedding).transpose()
+            dframe['x'] = x
+            dframe['y'] = y
         names = np.repeat(self.names, self.lengths())
         if ids is None:
             ids = np.arange(len(self))
         path_idx = np.repeat(ids, self.lengths())
-        changes = np.concatenate([st.change_string_list() for st in self])
+        #changes = np.concatenate([st.change_string_list() for st in self])
         data = np.concatenate([[[s.x, s.y, s.size, s.color, s.year] for s in st.states] for st in self])
         this_x, this_y, this_size, this_color, this_year, = data.transpose()
         this_countries = np.concatenate([[s.country_string() for s in st.states] for st in self])
-        dframe = pd.DataFrame({
-            'x': x,
-            'y': y,
-            'line': path_idx,
-            'algo': names,
-            #'legend': changes,
-            'new_x': this_x,
-            'new_y': this_y,
-            'new_size': this_size,
-            'new_color': this_color,
-            'new_year': this_year,
-            'new_country': this_countries,
-            'old_x': np.insert(this_x[:-1], 0, this_x[0]),
-            'old_y': np.insert(this_y[:-1], 0, this_y[0]),
-            'old_size': np.insert(this_size[:-1], 0, this_size[0]),
-            'old_color': np.insert(this_color[:-1], 0, this_color[0]),
-            'old_year': np.insert(this_year[:-1], 0, this_year[0]),
-            'old_country': np.insert(this_countries[:-1], 0, this_countries[0])
-        })
+
+        dframe['line'] = path_idx
+        dframe['algo'] = names
+        # dframe['legend'] = changes
+        dframe['new_x'] = this_x
+        dframe['new_y'] = this_y
+        dframe['new_size'] = this_size
+        dframe['new_color'] = this_color
+        dframe['new_year'] = this_year
+        dframe['new_country'] = this_countries
+        dframe['old_x'] = np.insert(this_x[:-1], 0, this_x[0])
+        dframe['old_y'] = np.insert(this_y[:-1], 0, this_y[0])
+        dframe['old_size'] = np.insert(this_size[:-1], 0, this_size[0])
+        dframe['old_color'] = np.insert(this_color[:-1], 0, this_color[0])
+        dframe['old_year'] = np.insert(this_year[:-1], 0, this_year[0])
+        dframe['old_country'] = np.insert(this_countries[:-1], 0, this_countries[0])
+
         if self.counts is not None:
             mult_label = 'multiplicity[{m_min};{m_max}]'.format(
                 m_min=self.counts.min(),
