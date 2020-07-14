@@ -202,7 +202,6 @@ class Stories:
     def plot(self):
         if not self.projected:
             raise Warning('Run projection first!')
-            return
         fig = plt.figure(figsize=(15,15))
         ax = fig.add_subplot(111)
         for idx, story in enumerate(self.embedding):
@@ -214,7 +213,7 @@ class Stories:
             ax.scatter(story[:1,0], story[:1,1], s=50, color='black')
         plt.legend()
     
-    def export_csv(self, filename, ids=None):
+    def export_csv(self, filename, ids=None, list_changes=False):
         dframe = pd.DataFrame()
         if not self.projected:
             print('Saving CSV without embedding!')
@@ -226,14 +225,15 @@ class Stories:
         if ids is None:
             ids = np.arange(len(self))
         path_idx = np.repeat(ids, self.lengths())
-        #changes = np.concatenate([st.change_string_list() for st in self])
+        if list_changes:
+            changes = np.concatenate([st.change_string_list() for st in self])
+            dframe['changes'] = changes
         data = np.concatenate([[[s.x, s.y, s.size, s.color, s.year] for s in st.states] for st in self])
         this_x, this_y, this_size, this_color, this_year, = data.transpose()
         this_countries = np.concatenate([[s.country_string() for s in st.states] for st in self])
 
         dframe['line'] = path_idx
         dframe['algo'] = names
-        # dframe['legend'] = changes
         dframe['new_x'] = this_x
         dframe['new_y'] = this_y
         dframe['new_size'] = this_size
@@ -255,7 +255,7 @@ class Stories:
             dframe[mult_label] = self.counts
         dframe.to_csv(filename,index=False, quoting=QUOTE_NONNUMERIC)
 
-    def download_csv(self, filename, ids=None):
+    def download_csv(self, filename, ids=None, list_changes=False):
         from google.colab import files
-        self.export_csv(filename, ids=ids)
+        self.export_csv(filename, ids=ids, list_changes=list_changes)
         files.download(filename)
