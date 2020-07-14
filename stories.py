@@ -14,6 +14,7 @@ from openTSNE.callbacks import ErrorLogger
 from sklearn.manifold import TSNE as sklearnTSNE
 from umap import UMAP
 from csv import QUOTE_NONNUMERIC
+import networkx as nx
 
 class Stories:
     
@@ -212,6 +213,23 @@ class Stories:
             ax.scatter(story[:,0], story[:,1], s=20)
             ax.scatter(story[:1,0], story[:1,1], s=50, color='black')
         plt.legend()
+
+    def plot_graph(self, opt_dict={}):
+        encoded, indices, counts = np.unique(self.encode(), axis=0, return_inverse=True, return_counts=True)
+        leni = np.add.accumulate(self.lengths())
+        edges = np.stack([
+                np.delete(indices, leni-1),
+                np.delete(indices, leni)[1:]
+            ]).transpose()
+        dig = nx.MultiDiGraph()
+        dig.add_edges_from(edges);
+        options = {
+            'node_color': 'black',
+            'node_size': 20,
+            'width': 1,
+        }
+        options = {**options, **opt_dict}
+        nx.draw_kamada_kawai(dig, **options)
     
     def export_csv(self, filename, ids=None, list_changes=False):
         dframe = pd.DataFrame()
@@ -225,9 +243,6 @@ class Stories:
         if ids is None:
             ids = np.arange(len(self))
         path_idx = np.repeat(ids, self.lengths())
-        if list_changes:
-            changes = np.concatenate([st.change_string_list() for st in self])
-            dframe['changes'] = changes
         data = np.concatenate([[[s.x, s.y, s.size, s.color, s.year] for s in st.states] for st in self])
         this_x, this_y, this_size, this_color, this_year, = data.transpose()
         this_countries = np.concatenate([[s.country_string() for s in st.states] for st in self])
@@ -246,6 +261,10 @@ class Stories:
         dframe['old_color'] = np.insert(this_color[:-1], 0, this_color[0])
         dframe['old_year'] = np.insert(this_year[:-1], 0, this_year[0])
         dframe['old_country'] = np.insert(this_countries[:-1], 0, this_countries[0])
+
+        if list_changes:
+            changes = np.concatenate([st.change_string_list() for st in self])
+            dframe['changes'] = changes
 
         if self.counts is not None:
             mult_label = 'multiplicity[{m_min};{m_max}]'.format(
