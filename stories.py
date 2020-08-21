@@ -224,15 +224,19 @@ class Stories:
             ax.scatter(story[:1,0], story[:1,1], s=50, color='black')
         plt.legend()
 
-    def plot_graph(self, opt_dict={}):
+    def make_graph(self):
         encoded, indices, counts = np.unique(self.encode(), axis=0, return_inverse=True, return_counts=True)
         leni = np.add.accumulate(self.lengths())
         edges = np.stack([
                 np.delete(indices, leni-1),
                 np.delete(indices, leni)[1:]
             ]).transpose()
-        dig = nx.MultiDiGraph()
-        dig.add_edges_from(edges);
+        digr = nx.MultiDiGraph()
+        digr.add_edges_from(edges);
+        return digr
+
+    def plot_graph(self, opt_dict={}):
+        digr = self.make_graph()
         options = {
             'node_color': 'black',
             'node_size': 20,
