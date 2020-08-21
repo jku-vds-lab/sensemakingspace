@@ -5,6 +5,7 @@ import json
 import numpy as np
 from matplotlib import pyplot as plt
 from scipy import interpolate
+from scipy.spatial.distance import pdist, squareform
 import pandas as pd
 import copy
 from numba import njit, float64
@@ -12,6 +13,7 @@ from numba import jit
 from openTSNE import TSNE as openTSNE
 from openTSNE.callbacks import ErrorLogger
 from sklearn.manifold import TSNE as sklearnTSNE
+from sklearn.manifold import MDS
 from umap import UMAP
 from csv import QUOTE_NONNUMERIC
 import networkx as nx
@@ -186,7 +188,15 @@ class Stories:
                 tsne = sklearnTSNE(
                     metric=state_distance,
                     verbose=3 if verbose else 0)
-                embedding = np.array(tsne.fit_transform(encoded))            
+                embedding = np.array(tsne.fit_transform(encoded))
+        elif method == 'mds':
+            mds = MDS(
+                n_components=2,
+                metric=True,
+                dissimilarity='precomputed'
+            )
+            distmat = squareform(pdist(encoded, state_distance))
+            embedding = mds.fit_transform(distmat)
         elif method == 'umap':
             umap = UMAP(metric=state_distance,
                 verbose=verbose,
