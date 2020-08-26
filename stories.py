@@ -243,7 +243,7 @@ class Stories:
             'width': 1,
         }
         options = {**options, **opt_dict}
-        nx.draw_kamada_kawai(dig, **options)
+        nx.draw_kamada_kawai(digr, **options)
     
     def export_csv(self, filename, ids=None, list_changes=False):
         dframe = pd.DataFrame()
