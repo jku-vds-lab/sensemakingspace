@@ -1,5 +1,6 @@
 
 from .story import Story
+from .utils import graphplot
 import re
 import json
 import numpy as np
@@ -17,6 +18,10 @@ from sklearn.manifold import MDS
 from umap import UMAP
 from csv import QUOTE_NONNUMERIC
 import networkx as nx
+import pandas as pd
+from datashader.bundling import connect_edges
+from datashader.layout import forceatlas2_layout
+from datashader.bundling import connect_edges, hammer_bundle
 
 class Stories:
     
@@ -198,7 +203,8 @@ class Stories:
             distmat = squareform(pdist(encoded, state_distance))
             embedding = mds.fit_transform(distmat)
         elif method == 'umap':
-            umap = UMAP(metric=state_distance,
+            umap = UMAP(
+                metric=state_distance,
                 verbose=verbose,
                 **kwargs)
             embedding = np.array(umap.fit_transform(encoded))
@@ -235,15 +241,28 @@ class Stories:
         digr.add_edges_from(edges);
         return digr
 
-    def plot_graph(self, opt_dict={}):
+    def plot_graph(self, method='networkx', options={}):
         digr = self.make_graph()
-        options = {
-            'node_color': 'black',
-            'node_size': 20,
-            'width': 1,
-        }
-        options = {**options, **opt_dict}
-        nx.draw_kamada_kawai(digr, **options)
+        if method == 'networkx':
+            dflt_options = {
+                'node_color': 'black',
+                'node_size': 20,
+                'width': 1,
+            }
+            opts = {**dflt_options, **options}
+            nx.draw_kamada_kawai(digr, **opts)
+        elif method == 'datashader':
+            digr = digr.to_undirected()
+            nodes = pd.DataFrame(digr.nodes(), columns=['name'])
+            edges = pd.DataFrame(digr.edges(), columns=['source', 'target'])
+            iterations = {'iterations': int(np.ceil(np.sqrt(len(nodes)))), **options}['iterations']
+            fd = forceatlas2_layout(nodes, edges, iterations=iterations)
+            bundle = {'bundle': False, **options}['bundle']
+            if bundle:
+                return graphplot(fd, hammer_bundle(fd,edges))
+            else:
+                return graphplot(fd, connect_edges(fd,edges))
+
     
     def export_csv(self, filename, ids=None, list_changes=False):
         dframe = pd.DataFrame()

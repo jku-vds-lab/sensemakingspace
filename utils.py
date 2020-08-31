@@ -2,6 +2,9 @@
 import numpy as np
 from scipy.spatial.distance import pdist
 
+import datashader as ds
+import datashader.transfer_functions as tf
+
 iso_to_country = {
     'AF': 'Afghanistan',
     'AX': 'Aland Islands',
@@ -585,3 +588,25 @@ def country_selection_to_vector(country_list, deg=False):
         avg_dist,
         len(country_list)
     ])
+
+cvsopts = dict(plot_height=500, plot_width=500)
+
+def nodesplot(nodes, name=None, canvas=None, cat=None):
+    canvas = ds.Canvas(**cvsopts) if canvas is None else canvas
+    aggregator=None if cat is None else ds.count_cat(cat)
+    agg=canvas.points(nodes,'x','y',aggregator)
+    return tf.spread(tf.shade(agg, cmap=["#FF3333"]), px=1, name=name)
+
+def edgesplot(edges, name=None, canvas=None):
+    canvas = ds.Canvas(**cvsopts) if canvas is None else canvas
+    return tf.shade(canvas.line(edges, 'x','y', agg=ds.count()), name=name)
+    
+def graphplot(nodes, edges, name="", canvas=None, cat=None):
+    if canvas is None:
+        xr = nodes.x.min(), nodes.x.max()
+        yr = nodes.y.min(), nodes.y.max()
+        canvas = ds.Canvas(x_range=xr, y_range=yr, **cvsopts)
+        
+    np = nodesplot(nodes, name + " nodes", canvas, cat)
+    ep = edgesplot(edges, name + " edges", canvas)
+    return tf.stack(ep, np, how="over", name=name)
