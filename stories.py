@@ -79,6 +79,9 @@ class Stories:
     
     def year_range(self):
         return (self.min_year(), self.max_year())
+
+    def year_span(self):
+        return np.abs(self.max_year() - self.min_year())
     
     def countries(self):
         return np.unique(np.concatenate([s.countries() for s in self.stories]))
@@ -108,10 +111,10 @@ class Stories:
         for w in weights:
             w_dict[w] = weights[w]            
         weights = np.array(list(w_dict.values()), dtype=np.float32)        
-        year_span = self.year_range()[1] - self.year_range()[0]        
+        year_span = self.year_span()
         num_countries = len(self.countries())
 
-        if condense_countries:
+        if not condense_countries:
             @jit(nopython=True)
             def state_distance(a, b):
                 a = a.astype(np.float32)
@@ -120,10 +123,10 @@ class Stories:
                     year_dist = 0
                 else:
                     year_dist = np.abs(a[0] - b[0]) / year_span
-                x_dist = np.linalg.norm(a[1:6] - b[1:6])
-                y_dist = np.linalg.norm(a[6:11] - b[6:11])
-                size_dist = np.linalg.norm(a[11:16] - b[11:16])
-                color_dist = np.linalg.norm(a[16:18] - b[16:18])
+                x_dist = 1 - np.dot(a[1:6], b[1:6])
+                y_dist = 1 - np.dot(a[6:11], b[6:11])
+                size_dist = 1 - np.dot(a[11:16], b[11:16])
+                color_dist = 1 - np.dot(a[16:18], b[16:18])
                 if num_countries == 0:
                     country_dist = 0
                 else:
@@ -141,10 +144,10 @@ class Stories:
                     year_dist = 0
                 else:
                     year_dist = np.abs(a[0] - b[0]) / year_span
-                x_dist = np.linalg.norm(a[1:6] - b[1:6])
-                y_dist = np.linalg.norm(a[6:11] - b[6:11])
-                size_dist = np.linalg.norm(a[11:16] - b[11:16])
-                color_dist = np.linalg.norm(a[16:18] - b[16:18])
+                x_dist = 1 - np.dot(a[1:6], b[1:6])
+                y_dist = 1 - np.dot(a[6:11], b[6:11])
+                size_dist = 1 - np.dot(a[11:16], b[11:16])
+                color_dist = 1 - np.dot(a[16:18], b[16:18])
                 if num_countries == 0:
                     country_dist = 0
                 else:
