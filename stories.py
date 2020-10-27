@@ -110,7 +110,7 @@ class Stories:
         }        
         for w in weights:
             w_dict[w] = weights[w]            
-        weights = np.array(list(w_dict.values()), dtype=np.float32)        
+        weights = np.array(list(w_dict.values()), dtype=np.float32)
         year_span = self.year_span()
         num_countries = len(self.countries())
 
@@ -171,7 +171,21 @@ class Stories:
                 return (dists*weights).sum()
         
         if delete_duplicates:
-            encoded, indices, counts = np.unique(self.encode(), axis=0, return_inverse=True, return_counts=True)
+            # check if any weight is 0.
+            encoded = self.encode()
+            if w_dict['year'] == 0.:
+                encoded[:,0] = 0.
+            if w_dict['x'] == 0.:
+                encoded[:,1:6] = 0.
+            if w_dict['y'] == 0.:
+                encoded[:,6:11] = 0.
+            if w_dict['size'] == 0.:
+                encoded[:,11:16] = 0.
+            if w_dict['color'] == 0.:
+                encoded[:,16:18] = 0.
+            if w_dict['countries'] == 0.:
+                encoded[:,18:] = 0.
+            encoded, indices, counts = np.unique(encoded, axis=0, return_inverse=True, return_counts=True)
             self.counts = counts[indices]
         else:
             encoded = self.encode()
