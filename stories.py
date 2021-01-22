@@ -252,7 +252,7 @@ class Stories:
         leni = np.add.accumulate(self.lengths())
         edges = np.stack([
                 np.delete(indices, leni-1),
-                np.delete(indices, leni)[1:]
+                np.delete(indices, leni-leni[0])
             ]).transpose()
         digr = nx.MultiDiGraph()
         digr.add_edges_from(edges);
