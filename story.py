@@ -8,15 +8,16 @@ from umap import UMAP
 from numba import njit, float64
 from numba import jit
 
-initial_state = State({
-        'year': 1800,
-        'x': 'gdp',
-        'y': 'life_expect',
-        'size': 'population',
-        'color': 'continent',
-        'countries': [],
-        'timestamp': t
-    })
+def initial_state(t):
+      return State({
+          'year': 1800,
+          'x': 'gdp',
+          'y': 'life_expect',
+          'size': 'population',
+          'color': 'continent',
+          'countries': [],
+          'timestamp': t
+          })
 
 class Story:
 
