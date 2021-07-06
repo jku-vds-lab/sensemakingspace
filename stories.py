@@ -12,7 +12,6 @@ import copy
 from numba import njit, float64
 from numba import jit
 from openTSNE import TSNE as openTSNE
-from openTSNE.callbacks import ErrorLogger
 from sklearn.manifold import TSNE as sklearnTSNE
 from sklearn.manifold import MDS
 from umap import UMAP
@@ -195,7 +194,7 @@ class Stories:
                 if verbose:
                     tsne = openTSNE(
                         metric=state_distance,
-                        callbacks=ErrorLogger(),
+                        verbose=verbose,
                         n_jobs=-1,
                         **kwargs
                     )
