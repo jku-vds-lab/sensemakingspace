@@ -2,11 +2,6 @@
 from .state import State
 import json
 import numpy as np
-from openTSNE import TSNE
-from openTSNE.callbacks import ErrorLogger
-from umap import UMAP
-from numba import njit, float64
-from numba import jit
 
 def initial_state(t):
       return State({
