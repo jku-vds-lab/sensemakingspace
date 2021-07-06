@@ -259,6 +259,7 @@ class Stories:
                     graph_distmat[i,j] = dists[j]
 
             graph_distmat = graph_distmat / graph_distmat.max()
+            graph_distmat[graph_distmat == -np.inf] = 2.
 
             attr_distmat = squareform(pdist(
                 np.unique(self.encode().astype(np.float32), axis=0),
