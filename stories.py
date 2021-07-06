@@ -288,7 +288,11 @@ class Stories:
                 embedding = embedding[indices]
         
         indices = np.add.accumulate(self.lengths())
-        self.embedding = np.array_split(embedding, indices)[:-1]
+        
+        if method == 'hybrid' and hasattr(alpha, '__iter__'):
+            self.embedding = [ np.array_split(e, indices)[:-1] for e in embedding]
+        else:
+            self.embedding = np.array_split(embedding, indices)[:-1]
         
         self.projected = True
     
