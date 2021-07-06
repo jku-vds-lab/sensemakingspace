@@ -12,6 +12,7 @@ class State:
         self.size = state_dict['size']
         self.color = state_dict['color']
         self.countries = state_dict['countries']
+        self.timestamp = state_dict['timestamp']
 
     def __str__(self):
         if len(self.countries) == 1:

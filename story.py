@@ -8,17 +8,18 @@ from umap import UMAP
 from numba import njit, float64
 from numba import jit
 
+def initial_state(t):
+      return State({
+          'year': 1800,
+          'x': 'gdp',
+          'y': 'life_expect',
+          'size': 'population',
+          'color': 'continent',
+          'countries': [],
+          'timestamp': t
+          })
 
 class Story:
-
-    initial_state = State({
-        'year': 1800,
-        'x': 'gdp',
-        'y': 'life_expect',
-        'size': 'population',
-        'color': 'continent',
-        'countries': []
-    })
 
     def __init__(self, source=None, drive_mounted=True, uploaded=None, name=None, set_initial=True):
 
@@ -45,9 +46,8 @@ class Story:
         # check if first state is initial Gapminder state
         # if not, insert initial Gapminder state
 
-        if set_initial:
-            if self.states == [] or self.states[0] != self.initial_state:
-                self.states.insert(0, self.initial_state)
+        if set_initial and self.states is not []:
+          self.states.insert(0, initial_state(self.states[0].timestamp))
 
     def from_json(self, filename, drive_mounted=True, uploaded=None):
 
@@ -76,6 +76,12 @@ class Story:
         #     (might be interesting to include
         #      if real values are available)
 
+        timestamps = []
+        for node in json_story['nodes']:
+          if node['type'] == 'action':
+            # timestamps.append(node)
+            timestamps.append(node['attrs']['meta']['timestamp'])
+        
         clean_states = []
         for state in states:
             cleaned = []
@@ -88,7 +94,7 @@ class Story:
         # transform to State objects
 
         readable_states = []
-        for state in states:
+        for state, t in zip(states, timestamps):
             year = state[0]['payload']['numVal']
             x = state[1]['id']
             y = state[2]['id']
@@ -106,7 +112,8 @@ class Story:
                 'size': size,
                 'color': color,
                 # 'projection': projection,
-                'countries': countries
+                'countries': countries,
+                'timestamp': t
             }))
         states = readable_states
 
