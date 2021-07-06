@@ -99,7 +99,7 @@ class Stories:
                 countries,
                 condense_countries=condense_countries) for s in self.stories])
     
-    def project(self, weights={}, verbose=False, delete_duplicates=False, method='tsne', implementation='openTSNE', condense_countries=False, **kwargs):        
+    def project(self, weights={}, alpha=.5, verbose=False, delete_duplicates=False, method='tsne', implementation='openTSNE', condense_countries=False, **kwargs):        
         w_dict = {
             'year': 1.,
             'x': 1.,
@@ -225,8 +225,67 @@ class Stories:
                 verbose=verbose,
                 **kwargs)
             embedding = np.array(umap.fit_transform(encoded))
+        elif method == 'hybrid':
+            if not delete_duplicates:
+                raise Warning('Hybrid layout always deletes duplicates!')
+
+            adj = nx.adj_matrix(self.make_graph()).toarray()
+
+            # adjacency matrix of undirected multigraph
+            intermediate = np.zeros_like(adj, dtype=np.int)
+            for (i, j), item in np.ndenumerate(adj):
+                intermediate[i,j] += item
+                intermediate[j,i] += item
+
+            # use inverse number of connections as weights
+            edges = []
+            weights = []
+            for (i,j), item in np.ndenumerate(intermediate):
+                if item != 0 and i <= j:
+                    edges.append((i,j))
+                    weights.append(item)
+
+            # construct weighted graph and calculate path lengths
+            g = nx.Graph()
+            for e, w in zip(edges, weights):
+                g.add_edge(*e, weight=1/w)
+            path_lengths = dict(nx.all_pairs_dijkstra_path_length(g))
+
+            # construct distmat from path_lengths
+            graph_distmat = np.zeros_like(adj, dtype=np.float)
+            graph_distmat -= np.inf
+            for i in path_lengths:
+                dists = path_lengths[i]
+                for j in dists:
+                    graph_distmat[i,j] = dists[j]
+
+            graph_distmat = graph_distmat / graph_distmat.max()
+
+            attr_distmat = squareform(pdist(
+                np.unique(self.encode().reshape(-1,100), axis=0),
+                metric=state_distance
+                )
+            )
+
+            init = 'random'
+            if hasattr(alpha, '__iter__'):
+                self.hybrid_alphas = alpha
+                embedding = []
+                for a in alpha:
+                    distmat = (1 - a) * graph_distmat + a * attr_distmat
+                    tsne = openTSNE(metric='precomputed', initialization=init)
+                    embedding.append(tsne.fit(distmat))
+            else:
+                distmat = (1 - alpha) * graph_distmat + alpha * attr_distmat
+                tsne = openTSNE(metric='precomputed', initialization=init)
+                embedding = tsne.fit(distmat)
+                init = embedding[-1]
+
         if delete_duplicates:
-            embedding = embedding[indices]
+            if method == 'hybrid' and hasattr(alpha, '__iter__'):
+                embedding = np.stack([ e[indices] for e in embedding])
+            else:
+                embedding = embedding[indices]
         
         indices = np.add.accumulate(self.lengths())
         self.embedding = np.array_split(embedding, indices)[:-1]
@@ -285,10 +344,11 @@ class Stories:
         dframe = pd.DataFrame()
         if not self.projected:
             print('Saving CSV without embedding!')
+        elif type(self.embedding[0]) is list:
+            multiple_embeddings = True
         else:
-            x,y = np.concatenate(self.embedding).transpose()
-            dframe['x'] = x
-            dframe['y'] = y
+            multiple_embeddings = False
+
         names = np.repeat(self.names, self.lengths())
         if ids is None:
             ids = np.arange(len(self))
@@ -322,7 +382,29 @@ class Stories:
                 m_max=self.counts.max()
             ) 
             dframe[mult_label] = self.counts
-        dframe.to_csv(filename,index=False, quoting=QUOTE_NONNUMERIC)
+
+        if multiple_embeddings:
+            for (emb, a) in zip(self.embedding, self.hybrid_alphas):
+                x,y = np.concatenate(emb).transpose()
+                dframe['x'] = x
+                dframe['y'] = y
+                basename, extension = filename.split('.')
+                dframe.to_csv('{basename}_alpha{alpha:03}.{extension}'.format(
+                    basename=basename,
+                    alpha=(int(100*a)),
+                    extension=extension
+                ),
+                    index=False,
+                    quoting=QUOTE_NONNUMERIC
+                )
+        else:
+            x,y = np.concatenate(self.embedding).transpose()
+            dframe['x'] = x
+            dframe['y'] = y
+            dframe.to_csv(filename,
+                    index=False,
+                    quoting=QUOTE_NONNUMERIC
+                )
 
     def download_csv(self, filename, ids=None, list_changes=False):
         from google.colab import files
