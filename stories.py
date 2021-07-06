@@ -114,7 +114,7 @@ class Stories:
         num_countries = len(self.countries())
 
         if not condense_countries:
-            # @jit(nopython=True)
+            @jit(nopython=True)
             def state_distance(a, b):
                 a = a.astype(np.float32)
                 b = b.astype(np.float32)
@@ -135,7 +135,7 @@ class Stories:
             
                 return (dists*weights).sum()
         else:
-            # @jit(nopython=True)
+            @jit(nopython=True)
             def state_distance(a, b):
                 a = a.astype(np.float32)
                 b = b.astype(np.float32)
@@ -238,15 +238,15 @@ class Stories:
 
             # use inverse number of connections as weights
             edges = []
-            weights = []
+            edge_weights = []
             for (i,j), item in np.ndenumerate(intermediate):
                 if item != 0 and i <= j:
                     edges.append((i,j))
-                    weights.append(item)
+                    edge_weights.append(item)
 
             # construct weighted graph and calculate path lengths
             g = nx.Graph()
-            for e, w in zip(edges, weights):
+            for e, w in zip(edges, edge_weights):
                 g.add_edge(*e, weight=1/w)
             path_lengths = dict(nx.all_pairs_dijkstra_path_length(g))
 
