@@ -114,7 +114,7 @@ class Stories:
         num_countries = len(self.countries())
 
         if not condense_countries:
-            @jit(nopython=True)
+            # @jit(nopython=True)
             def state_distance(a, b):
                 a = a.astype(np.float32)
                 b = b.astype(np.float32)
@@ -135,7 +135,7 @@ class Stories:
             
                 return (dists*weights).sum()
         else:
-            @jit(nopython=True)
+            # @jit(nopython=True)
             def state_distance(a, b):
                 a = a.astype(np.float32)
                 b = b.astype(np.float32)
